@@ -33,3 +33,26 @@ export async function updateUser(
       return StatusError;
     });
 }
+
+export async function updateUserLastLogin(id: string): Promise<boolean> {
+  const user = new User({
+    _id: id,
+  });
+
+  return await user
+    .updateOne(
+      {
+        $set: {
+          lastLogin: new Date(),
+        },
+      },
+      { upsert: false }
+    )
+    .then((result) => {
+      return result.modifiedCount !== 0;
+    })
+    .catch((error) => {
+      Logger.error('updateUser', error.message);
+      return false;
+    });
+}

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { config } from './config/config';
 import userRoutes from './routes/user';
+import authRoutes from './routes/auth';
 import * as send from './constants/response';
 const express = require('express');
 const app = express();
@@ -20,6 +21,7 @@ const StartServer = () => {
   });
 
   app.use('/api/user', userRoutes);
+  app.use('/api/auth', authRoutes);
 
   // unknown path
   app.use((req: any, res: any, next: any) => {

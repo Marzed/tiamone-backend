@@ -119,6 +119,10 @@ const getUserByID = async (req: Request, res: Response) => {
     }
   }
 
+  delete result.data._id;
+  delete result.data.__v;
+  delete result.data.password;
+
   send.SuccessWithObject(res, result.data);
   return;
 };

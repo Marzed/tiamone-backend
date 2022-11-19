@@ -5,6 +5,7 @@ import { StatusError } from '../../../constants/response';
 export interface IUserItemModel {
   id: string;
   email: string;
+  password: string;
   createdAt: string;
 }
 
@@ -18,12 +19,16 @@ export async function getAllUsers(): Promise<SearchResult> {
     .exec()
     .then((results) => {
       const data: Array<IUserItemModel> = results.map((value) => {
-        let item: IUserItemModel = {
+        const data: IUserItemModel = {
           id: value.id,
           email: value.email,
           createdAt: value.createdAt,
+          password: value.password,
         };
-        return item;
+        // delete fields
+        delete data.password;
+
+        return data;
       });
       return <SearchResult>{
         data,
