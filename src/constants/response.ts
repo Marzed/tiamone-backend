@@ -1,6 +1,6 @@
 import { Response } from 'express';
 
-const StatusSuccess = 'success',
+export const StatusSuccess = 'success',
   StatusError = 'error',
   StatusErrorBodyType = 'errorBodyType',
   StatusErrorBodyInvalid = 'errorBodyInvalid',

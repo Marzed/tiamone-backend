@@ -1,132 +1,96 @@
 import { Request, Response } from 'express';
-import User from '../models/user';
-import mongoose, { Schema, Types } from 'mongoose';
 import * as send from '../constants/response';
-import { MongoCodeDuplicate } from '../constants/mongo-code';
+import {
+  StatusAccountExist,
+  StatusAccountNotFound,
+  StatusError,
+  StatusSuccess,
+} from '../constants/response';
 import { IsValidObjectId } from '../helper/validate';
-import Logger from '../logger/logger';
+import { WorkflowClient } from '@temporalio/client';
+import {
+  DeleteUserByID,
+  GetAllUsers,
+  GetUserById,
+  NewUser,
+  UpdateUser,
+} from '../temporal/workflows/workflows';
+import { GenerateWorkflowId } from '../helper/transactionID';
+import { config } from '../config/config';
+const argon2 = require('argon2');
 
-interface ResponseUserInfo {
-  id: string;
-  email: string;
-  createdAt: string;
-}
-
-const createUser = (req: Request, res: Response) => {
+const createUser = async (req: Request, res: Response) => {
   let { email, password } = req.body;
+  //TODO validate
 
-  const user = new User({
-    _id: new mongoose.Types.ObjectId(),
-    email,
-    password,
+  const hash = await argon2.hash(password, {
+    saltLength: config.password.saltLength,
+    hashLength: config.password.hashLength,
   });
 
-  return user
-    .save()
-    .then(() => {
-      send.Success(res);
-      return;
-    })
-    .catch((error) => {
-      Logger.error('createUser', error.message);
-      switch (error.code) {
-        case MongoCodeDuplicate:
-          send.AccountExist(res);
-          return;
-        default:
-          send.ErrorInternal(res);
-          return;
-      }
-    });
-};
-
-const updateUser = (req: Request, res: Response) => {
-  let { id, email, password } = req.body;
-
-  const user = new User({
-    _id: id,
-    email,
-    password,
+  const client = new WorkflowClient();
+  const handle = await client.start(NewUser, {
+    workflowId: GenerateWorkflowId('register-user'),
+    taskQueue: config.taskQueue.dev,
+    args: [email, hash],
   });
+  const result = await handle.result();
 
-  return user
-    .updateOne(
-      {
-        $set: {
-          email,
-          password,
-        },
-      },
-      { upsert: false }
-    )
-    .then((result) => {
-      // unmodified
-      if (result.modifiedCount === 0) {
-        send.Error(res);
-        return;
-      }
-
+  switch (result) {
+    case StatusSuccess:
       send.Success(res);
       return;
-    })
-    .catch((error) => {
-      Logger.error('updateUser', error.message);
-      return send.ErrorInternal(res);
-    });
-};
-
-const getAllUsers = (req: Request, res: Response) => {
-  User.find()
-    .exec()
-    .then((results) => {
-      const data: Array<ResponseUserInfo> = results.map((value) => {
-        let item: ResponseUserInfo = {
-          id: value.id,
-          email: value.email,
-          createdAt: value.createdAt,
-        };
-        return item;
-      });
-      return send.SuccessWithArrayOfObjects(res, data);
-    })
-    .catch((error) => {
-      Logger.error('getAllUsers', error.message);
-      return send.ErrorInternal(res);
-    });
-};
-
-const getUserByID = (req: Request, res: Response) => {
-  const { id } = req.params;
-
-  if (!IsValidObjectId(id)) {
-    send.ErrorParam(res);
-    return;
-  }
-
-  User.findById(new Types.ObjectId(id))
-    .exec()
-    .then((result) => {
-      if (!result) {
-        send.AccountNotFound(res);
-        return;
-      }
-
-      const data: ResponseUserInfo = {
-        id: result.id,
-        email: result.email,
-        createdAt: result.createdAt,
-      };
-      send.SuccessWithObject(res, data);
+    case StatusAccountExist:
+      send.AccountExist(res);
       return;
-    })
-    .catch((error) => {
-      Logger.error('getUserByID', error.message);
+    default:
       send.Error(res);
       return;
-    });
+  }
 };
 
-const deleteUserByID = (req: Request, res: Response) => {
+const updateUser = async (req: Request, res: Response) => {
+  let { id, email, password } = req.body;
+
+  const client = new WorkflowClient();
+  const handle = await client.start(UpdateUser, {
+    workflowId: GenerateWorkflowId(`update-user-${id}`),
+    taskQueue: config.taskQueue.dev,
+    args: [id, email, password],
+  });
+  const result = await handle.result();
+
+  switch (result) {
+    case StatusSuccess:
+      send.Success(res);
+      return;
+    case StatusAccountExist:
+      send.AccountExist(res);
+      return;
+    default:
+      send.Error(res);
+      return;
+  }
+};
+
+const getAllUsers = async (req: Request, res: Response) => {
+  const client = new WorkflowClient();
+  const handle = await client.start(GetAllUsers, {
+    workflowId: GenerateWorkflowId(`workflow`),
+    taskQueue: config.taskQueue.dev,
+    args: [],
+  });
+  const result = await handle.result();
+  if (result.error) {
+    send.Error(res);
+    return;
+  }
+
+  send.SuccessWithArrayOfObjects(res, result.data);
+  return;
+};
+
+const getUserByID = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   if (!IsValidObjectId(id)) {
@@ -134,21 +98,58 @@ const deleteUserByID = (req: Request, res: Response) => {
     return;
   }
 
-  User.findByIdAndDelete(new Types.ObjectId(id))
-    .exec()
-    .then((result) => {
-      if (!result) {
+  const client = new WorkflowClient();
+  const handle = await client.start(GetUserById, {
+    workflowId: GenerateWorkflowId(`workflow`),
+    taskQueue: config.taskQueue.dev,
+    args: [id],
+  });
+
+  const result = await handle.result();
+  if (result.error) {
+    switch (result.error) {
+      case StatusAccountNotFound:
         send.AccountNotFound(res);
         return;
-      }
+      case StatusError:
+        send.Error(res);
+        return;
+      default:
+        break;
+    }
+  }
+
+  send.SuccessWithObject(res, result.data);
+  return;
+};
+
+const deleteUserByID = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (!IsValidObjectId(id)) {
+    send.ErrorParam(res);
+    return;
+  }
+
+  const client = new WorkflowClient();
+  const handle = await client.start(DeleteUserByID, {
+    workflowId: GenerateWorkflowId('register-user'),
+    taskQueue: config.taskQueue.dev,
+    args: [id],
+  });
+  const result = await handle.result();
+
+  switch (result) {
+    case StatusSuccess:
       send.Success(res);
       return;
-    })
-    .catch((error) => {
-      Logger.error('getUserByID', error.message);
-      send.ErrorInternal(res);
+    case StatusAccountNotFound:
+      send.AccountNotFound(res);
       return;
-    });
+    default:
+      send.Error(res);
+      return;
+  }
 };
 
 export default { getAllUsers, createUser, updateUser, getUserByID, deleteUserByID };

@@ -1,16 +1,24 @@
 {
+  "version": "4.8.4",
   "compilerOptions": {
+    "emitDecoratorMetadata": false,
+    "experimentalDecorators": false,
+    "declaration": true,
+    "declarationMap": true,
+    "composite": true,
+    "rootDir": "./src",
     "module": "commonjs",
     "esModuleInterop": true,
     "target": "es6",
     "noImplicitAny": true,
     "moduleResolution": "node",
     "sourceMap": true,
-    "outDir": "dist",
+    "outDir": "build",
     "baseUrl": ".",
     "paths": {
       "*": ["node_modules/*"]
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }

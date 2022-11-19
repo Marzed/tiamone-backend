@@ -11,7 +11,9 @@ const MONGO_PORT = process.env.MONGO_PORT || '28019';
 const MONGO_DBNAME = process.env.MONGO_DBNAME || 'tiamone';
 const MONGO_URL = `mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DBNAME}?directConnection=true`;
 
-// VALIDATE
+// PASSWORD
+const saltLength: number = 32;
+const hashLength: number = 60;
 
 export const config = {
   mongo: {
@@ -19,5 +21,12 @@ export const config = {
   },
   server: {
     port: SERVER_PORT,
+  },
+  taskQueue: {
+    dev: 'dev-queue',
+  },
+  password: {
+    saltLength,
+    hashLength,
   },
 };

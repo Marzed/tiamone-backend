@@ -1,4 +1,4 @@
-import mongoose, { Error } from 'mongoose';
+import mongoose from 'mongoose';
 import { config } from './config/config';
 import userRoutes from './routes/user';
 import * as send from './constants/response';
@@ -8,17 +8,6 @@ import Logger from './logger/logger';
 
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
-mongoose
-  .connect(config.mongo.url, { retryWrites: true, w: 'majority' })
-  .then(() => {
-    Logger.info('Startup', 'Connected to mongoDB');
-    StartServer();
-  })
-  .catch((error) => {
-    Logger.info('Startup', 'Unable to connect:');
-    Logger.info('Startup', error);
-  });
 
 const StartServer = () => {
   app.use(cors());
@@ -37,7 +26,9 @@ const StartServer = () => {
     return send.Unknown(res);
   });
 
-  app.listen(process.env.SERVER_PORT, () =>
-    Logger.info('Startup', 'Start API on port: ' + process.env.SERVER_PORT)
+  app.listen(config.server.port, () =>
+    Logger.info('Startup', 'Start API on port: ' + config.server.port)
   );
 };
+
+StartServer();
