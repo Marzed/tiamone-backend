@@ -1,3 +1,3 @@
 export const GenerateWorkflowId = (userID: string): string => {
-  return `${userID}/${Date.now()}`;
+  return `TRX/${userID}/${Date.now()}`;
 };

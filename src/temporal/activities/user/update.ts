@@ -4,13 +4,11 @@ import Logger from '../../../logger/logger';
 
 export async function updateUser(
   id: string,
-  email: string,
-  password: string
+  email: string
 ): Promise<typeof StatusSuccess | typeof StatusError> {
   const user = new User({
     _id: id,
     email,
-    password,
   });
 
   return await user
@@ -18,7 +16,6 @@ export async function updateUser(
       {
         $set: {
           email,
-          password,
         },
       },
       { upsert: false }

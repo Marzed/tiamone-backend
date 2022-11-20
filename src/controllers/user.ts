@@ -30,7 +30,7 @@ const createUser = async (req: Request, res: Response) => {
 
   const client = new WorkflowClient();
   const handle = await client.start(NewUser, {
-    workflowId: GenerateWorkflowId('register-user'),
+    workflowId: GenerateWorkflowId('sign-up'),
     taskQueue: config.taskQueue.dev,
     args: [email, hash],
   });
@@ -56,7 +56,7 @@ const updateUser = async (req: Request, res: Response) => {
   const handle = await client.start(UpdateUser, {
     workflowId: GenerateWorkflowId(`update-user-${id}`),
     taskQueue: config.taskQueue.dev,
-    args: [id, email, password],
+    args: [id, email],
   });
   const result = await handle.result();
 
@@ -76,7 +76,7 @@ const updateUser = async (req: Request, res: Response) => {
 const getAllUsers = async (req: Request, res: Response) => {
   const client = new WorkflowClient();
   const handle = await client.start(GetAllUsers, {
-    workflowId: GenerateWorkflowId(`workflow`),
+    workflowId: GenerateWorkflowId(`get-all-users`),
     taskQueue: config.taskQueue.dev,
     args: [],
   });
@@ -100,7 +100,7 @@ const getUserByID = async (req: Request, res: Response) => {
 
   const client = new WorkflowClient();
   const handle = await client.start(GetUserById, {
-    workflowId: GenerateWorkflowId(`workflow`),
+    workflowId: GenerateWorkflowId(`get-user-by-id`),
     taskQueue: config.taskQueue.dev,
     args: [id],
   });
@@ -137,7 +137,7 @@ const deleteUserByID = async (req: Request, res: Response) => {
 
   const client = new WorkflowClient();
   const handle = await client.start(DeleteUserByID, {
-    workflowId: GenerateWorkflowId('register-user'),
+    workflowId: GenerateWorkflowId('delete-user-by-id'),
     taskQueue: config.taskQueue.dev,
     args: [id],
   });

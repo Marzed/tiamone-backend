@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run clear && tsc --build ./tsconfig.json",
     "start": "npx tsx src/index.ts",
     "format": "npx prettier --write './**/*.{ts,tsx,js,json}'",
     "dev": "npm-run-all -l build:server --parallel dev:temporal dev:node start:worker",
@@ -12,7 +13,6 @@
     "dev:temporal": "tsc --build --watch ./tsconfig.json",
     "dev:node": "npx tsx src/index.ts",
     "start:worker": "nodemon ./src/temporal/worker/worker",
-
     "prod": "npm run clear && npm run prod:start",
     "prod:start": "npm-run-all -l prod:build --parallel prod:build-watch prod:node prod:worker",
     "prod:build": "tsc --build ./tsconfig.json",
@@ -20,7 +20,6 @@
     "prod:node": "npx tsx ./build/index.js",
     "prod:worker": "nodemon ./src/temporal/worker/worker",
     "clear": "rm -rf ./build && rm -rf ./tsconfig.tsbuildinfo",
-
     "build-image": "docker build -t tiamone-backend:v1 .",
     "build-container": "docker run --name tiamone-backend -p 25000:25000 --env-file .env tiamone-backend:v1"
   },

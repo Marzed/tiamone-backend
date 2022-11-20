@@ -33,8 +33,8 @@ export async function NewUser(email: string, password: string): Promise<string> 
   return await createUser(email, password);
 }
 
-export async function UpdateUser(id: string, email: string, password: string): Promise<string> {
-  return await updateUser(id, email, password);
+export async function UpdateUser(id: string, email: string): Promise<string> {
+  return await updateUser(id, email);
 }
 
 export async function GetAllUsers(): Promise<activities.SearchResult> {
@@ -101,12 +101,8 @@ export async function wfReAuthWithRefreshToken(token: string): Promise<IAuthSign
   const userID = await checkRefreshToken(token);
   if (!userID) return <IAuthSignIn>{ error: StatusTokenInvalid };
   const isFoundAndDeleted = await getUserTokensByIDAndRefresh(userID, token);
-  console.log('isFoundAndDeleted', isFoundAndDeleted);
-  console.log('token', token);
-  console.log('userID', userID);
   if (!isFoundAndDeleted) return <IAuthSignIn>{ error: StatusTokenInvalid };
   if (!userID) return <IAuthSignIn>{ error: StatusTokenInvalid };
-
   const user = await getUserById(userID);
   if (user.error) return <IAuthSignIn>{ error: user.error };
   const tokens = await generateTokens(user.data._id, user.data.role);

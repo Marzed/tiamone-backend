@@ -5,4 +5,4 @@ ln -s /etc/nginx/sites-available/tiamone.com /etc/nginx/sites-enabled/tiamone.co
 
 **PM2**
 
-pm2 start npm --name "teamone-backend" -- run "dev"
+pm2 start npm --name "tiamone-backend" -- run "prod:start"

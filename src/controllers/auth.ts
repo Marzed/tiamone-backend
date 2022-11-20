@@ -27,7 +27,7 @@ const SignIn = async (req: Request, res: Response) => {
 
   const client = new WorkflowClient();
   const handle = await client.start(AuthSignIn, {
-    workflowId: GenerateWorkflowId('register-user'),
+    workflowId: GenerateWorkflowId('sign-in'),
     taskQueue: config.taskQueue.dev,
     args: [email, password],
   });
@@ -69,7 +69,7 @@ const ReAuthWithRefreshToken = async (req: Request, res: Response) => {
 
   const client = new WorkflowClient();
   const handle = await client.start(wfReAuthWithRefreshToken, {
-    workflowId: GenerateWorkflowId('ReAuthWithRefresh'),
+    workflowId: GenerateWorkflowId('re-auth-with-refresh'),
     taskQueue: config.taskQueue.dev,
     args: [String(token)],
   });
