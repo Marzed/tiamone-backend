@@ -2,16 +2,27 @@
   "name": "tiamone-backend",
   "version": "1.0.0",
   "description": "Marzed Studio",
-  "main": "src/app.ts",
+  "main": "src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx tsx src/app.ts",
+    "start": "npx tsx src/index.ts",
     "format": "npx prettier --write './**/*.{ts,tsx,js,json}'",
-    "dev": "npm-run-all -l build:temporal --parallel dev:temporal dev:node start:worker",
-    "build:temporal": "tsc --build ./tsconfig.json",
+    "dev": "npm-run-all -l build:server --parallel dev:temporal dev:node start:worker",
+    "build:server": "tsc --build ./tsconfig.json",
     "dev:temporal": "tsc --build --watch ./tsconfig.json",
-    "dev:node": "npx tsx src/app.ts",
-    "start:worker": "nodemon ./src/temporal/worker/worker"
+    "dev:node": "npx tsx src/index.ts",
+    "start:worker": "nodemon ./src/temporal/worker/worker",
+
+    "prod": "npm run clear && npm run prod:start",
+    "prod:start": "npm-run-all -l prod:build --parallel prod:build-watch prod:node prod:worker",
+    "prod:build": "tsc --build ./tsconfig.json",
+    "prod:build-watch": "tsc --build --watch ./tsconfig.json",
+    "prod:node": "npx tsx ./build/index.js",
+    "prod:worker": "nodemon ./src/temporal/worker/worker",
+    "clear": "rm -rf ./build && rm -rf ./tsconfig.tsbuildinfo",
+
+    "build-image": "docker build -t tiamone-backend:v1 .",
+    "build-container": "docker run --name tiamone-backend -p 25000:25000 --env-file .env tiamone-backend:v1"
   },
   "repository": {
     "type": "git",
